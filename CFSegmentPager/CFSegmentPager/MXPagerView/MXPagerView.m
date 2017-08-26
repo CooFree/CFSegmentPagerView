@@ -33,6 +33,11 @@
 
 @property (nonatomic, strong) NSMutableDictionary   *registration;
 @property (nonatomic, strong) NSMutableArray        *reuseQueue;
+
+/// 记录刚开始时的偏移量
+@property (nonatomic, assign) NSInteger startOffsetX;
+/// 标记按钮是否点击
+@property (nonatomic, assign) BOOL isClickBtn;
 @end
 
 @implementation MXPagerView {
@@ -67,6 +72,8 @@
     super.delegate = _forwarder;
     self.pagingEnabled = YES;
     self.scrollsToTop = NO;
+    self.bounces = NO;
+
     self.directionalLockEnabled = YES;
     self.showsVerticalScrollIndicator = NO;
     self.showsHorizontalScrollIndicator = NO;
@@ -74,6 +81,9 @@
     self.pages = [NSMutableDictionary dictionary];
     self.registration = [NSMutableDictionary dictionary];
     self.reuseQueue = [NSMutableArray array];
+
+    self.startOffsetX = 0;
+
 }
 
 - (void)layoutSubviews {
@@ -121,6 +131,7 @@
 }
 
 - (void)showPageAtIndex:(NSInteger)index animated:(BOOL)animated {
+    self.isClickBtn = YES;
     if (index >= 0 && index < _count && index != _index) {
         //The tab behavior disable animation
         animated = (self.transitionStyle == MXPagerViewTransitionStyleTab)? NO : animated;
@@ -328,6 +339,53 @@
 }
 
 #pragma mark <UIScrollViewDelegate>
+- (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
+    self.isClickBtn = NO;
+    self.startOffsetX = scrollView.contentOffset.x;
+}
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView {
+    if (self.isClickBtn == YES) {
+        return;
+    }
+    // 1、定义获取需要的数据
+    CGFloat progress = 0;
+    NSInteger originalIndex = 0;
+    NSInteger targetIndex = 0;
+    // 2、判断是左滑还是右滑
+    CGFloat currentOffsetX = scrollView.contentOffset.x;
+    CGFloat scrollViewW = scrollView.bounds.size.width;
+    if (currentOffsetX > self.startOffsetX) { // 左滑
+        // 1、计算 progress
+        progress = currentOffsetX / scrollViewW - floor(currentOffsetX / scrollViewW);
+        // 2、计算 originalIndex
+        originalIndex = currentOffsetX / scrollViewW;
+        // 3、计算 targetIndex
+        targetIndex = originalIndex + 1;
+        if (targetIndex >= _count) {
+            progress = 1;
+            targetIndex = originalIndex;
+        }
+        // 4、如果完全划过去
+        if (currentOffsetX - self.startOffsetX == scrollViewW) {
+            progress = 1;
+            targetIndex = originalIndex;
+        }
+    } else { // 右滑
+        // 1、计算 progress
+        progress = 1 - (currentOffsetX / scrollViewW - floor(currentOffsetX / scrollViewW));
+        // 2、计算 targetIndex
+        targetIndex = currentOffsetX / scrollViewW;
+        // 3、计算 originalIndex
+        originalIndex = targetIndex + 1;
+        if (originalIndex >= _count) {
+            originalIndex = _count - 1;
+        }
+    }
+    // 3、pageContentViewDelegare; 将 progress／sourceIndex／targetIndex 传递给 SGPageTitleView
+    if (self.delegate && [self.delegate respondsToSelector:@selector(pageContentView:progress:originalIndex:targetIndex:)]) {
+        [self.delegate pageContentView:self progress:progress originalIndex:originalIndex targetIndex:targetIndex];
+    }
+}
 
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
     NSInteger position  = scrollView.contentOffset.x;

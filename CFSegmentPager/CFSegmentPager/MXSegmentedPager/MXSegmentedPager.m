@@ -24,12 +24,14 @@
 #import "MXScrollView.h"
 #import "MXSegmentedPager.h"
 #import "CFPageTitleView.h"
+#import "SGPageTitleView.h"
 
-@interface MXSegmentedPager () <MXScrollViewDelegate, MXPagerViewDelegate, MXPagerViewDataSource>
+@interface MXSegmentedPager () <MXScrollViewDelegate, MXPagerViewDelegate, MXPagerViewDataSource,SGPageTitleViewDelegate>
 @property (nonatomic, strong) MXScrollView          *contentView;
 //@property (nonatomic, strong) HMSegmentedControl    *segmentedControl;
 @property (nonatomic, strong) MXPagerView           *pager;
 @property (nonatomic, weak) CFPageTitleView *titleView;
+@property (nonatomic, strong) SGPageTitleView *pageTitleView;
 
 @end
 
@@ -97,7 +99,9 @@
         }
     }
 
-    [self.titleView setNeedsDisplay];
+//    [self.titleView setNeedsDisplay];
+
+    [self.pageTitleView setNeedsLayout];
 
     [self.pager reloadData];
 }
@@ -152,7 +156,8 @@
     
 //    self.segmentedControl.frame = frame;
 
-    self.titleView.frame = frame;
+//    self.titleView.frame = frame;
+    self.pageTitleView.frame = frame;
 }
 
 - (void)layoutPager {
@@ -201,7 +206,23 @@
 //    }
 //    return _segmentedControl;
 //}
+- (SGPageTitleView *)pageTitleView {
+    if (!_pageTitleView) {
+//        NSArray *titleArr = @[@"精选", @"电影", @"电视剧", @"综艺", @"NBA", @"娱乐", @"动漫", @"演唱会", @"VIP会员"];
+        /// pageTitleView
+//        CGFloat width         = [UIScreen mainScreen].bounds.size.width / titles.count;
 
+        _pageTitleView = [SGPageTitleView pageTitleViewWithFrame:CGRectMake(0, 0, [UIScreen mainScreen].bounds.size.width, _controlHeight) delegate:self titleNames:_titles];
+//        _pageTitleView.backgroundColor = [UIColor redColor];
+        _pageTitleView.selectedIndex = 1;
+        _pageTitleView.titleColorStateNormal = [UIColor lightGrayColor];
+        _pageTitleView.titleColorStateSelected = [UIColor blackColor];
+        _pageTitleView.indicatorColor = [UIColor blackColor];
+        [self.contentView addSubview:_pageTitleView];
+        _pageTitleView.indicatorLengthStyle = SGIndicatorLengthStyleEqual;
+    }
+    return _pageTitleView;
+}
 - (CFPageTitleView *)titleView {
     if (!_titleView) {
         CFPageTitleView *titleView = [[CFPageTitleView alloc] init];
@@ -292,14 +313,22 @@
 //    [self.pager showPageAtIndex:segmentedControl.selectedSegmentIndex animated:YES];
 //}
 
+#pragma mark SGPageTitleView
+- (void)pageTitleView:(SGPageTitleView *)pageTitleView selectedIndex:(NSInteger)selectedIndex {
+    [self.pager showPageAtIndex:selectedIndex animated:YES];
+}
+
 #pragma mark <MXPagerViewDelegate>
+- (void)pageContentView:(MXPagerView *)pageContentView progress:(CGFloat)progress originalIndex:(NSInteger)originalIndex targetIndex:(NSInteger)targetIndex {
+    [self.pageTitleView setPageTitleViewWithProgress:progress originalIndex:originalIndex targetIndex:targetIndex];
+}
 
 - (void)pagerView:(MXPagerView *)pagerView willMoveToPage:(UIView *)page atIndex:(NSInteger)index {
 //    [self.segmentedControl setSelectedSegmentIndex:index animated:YES];
 }
 
 - (void)pagerView:(MXPagerView *)pagerView didMoveToPage:(UIView *)page atIndex:(NSInteger)index {
-    self.titleView.selectedIndex = index;
+//    self.titleView.selectedIndex = index;
 //    [self.segmentedControl setSelectedSegmentIndex:index animated:NO];
 //    [self changedToIndex:index];
 }

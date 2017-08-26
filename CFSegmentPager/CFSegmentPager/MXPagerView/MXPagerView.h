@@ -78,6 +78,9 @@ typedef NS_ENUM(NSInteger, MXPagerViewTransitionStyle) {
  */
 - (void)pagerView:(MXPagerView *)pagerView didEndDisplayingPage:(UIView *)page atIndex:(NSInteger)index;
 
+
+- (void)pageContentView:(MXPagerView *)pageContentView progress:(CGFloat)progress originalIndex:(NSInteger)originalIndex targetIndex:(NSInteger)targetIndex;
+
 @end
 
 /**
