@@ -15,7 +15,7 @@
 @property (nonatomic, strong) MXSegmentedPager  * segmentedPager;
 @property (nonatomic, strong) UITableView       * tableView;
 @property (nonatomic, strong) UITableView       * tableView2;
-
+@property (nonatomic, strong) UITableView       * tableView3;
 
 @end
 
@@ -59,7 +59,7 @@
         // Set a cover on the top of the view
 
         _cover = [[UIView alloc]initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, 150)];
-        _cover.backgroundColor = [UIColor lightGrayColor];
+        _cover.backgroundColor = [UIColor groupTableViewBackgroundColor];
     }
     return _cover;
 }
@@ -93,7 +93,15 @@
     }
     return _tableView2;
 }
-
+- (UITableView *)tableView3 {
+    if (!_tableView3) {
+        //Add a table page
+        _tableView3 = [[UITableView alloc] init];
+        _tableView3.delegate = self;
+        _tableView3.dataSource = self;
+    }
+    return _tableView3;
+}
 
 #pragma mark <MXSegmentedPagerDelegate>
 
@@ -112,15 +120,15 @@
 #pragma mark <MXSegmentedPagerDataSource>
 
 - (NSInteger)numberOfPagesInSegmentedPager:(MXSegmentedPager *)segmentedPager {
-    return 2;
+    return 3;
 }
 
 - (NSString *)segmentedPager:(MXSegmentedPager *)segmentedPager titleForSectionAtIndex:(NSInteger)index {
-    return @[@"Table", @"Web"][index];
+    return @[@"关注",@"粉丝", @"动态"][index];
 }
 
 - (UIView *)segmentedPager:(MXSegmentedPager *)segmentedPager viewForPageAtIndex:(NSInteger)index {
-    return @[self.tableView, self.tableView2][index];
+    return @[self.tableView,self.tableView2, self.tableView3][index];
 }
 
 #pragma mark <UITableViewDelegate>
@@ -144,7 +152,7 @@
     if (cell == nil) {
         cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
     }
-    cell.textLabel.text = (indexPath.row % 2)? @"Text" : @"Web";
+    cell.textLabel.text = [NSString stringWithFormat:@"第%zd行",indexPath.row];
 
     return cell;
 }
